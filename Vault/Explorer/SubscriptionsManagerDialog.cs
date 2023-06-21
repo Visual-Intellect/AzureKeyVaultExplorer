@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved. 
+// Copyright (c) Microsoft Corporation. All rights reserved. 
 // Licensed under the MIT License. See License.txt in the project root for license information. 
 
 using Microsoft.Azure;
@@ -22,7 +22,7 @@ namespace Microsoft.Vault.Explorer
 {
     public partial class SubscriptionsManagerDialog : Form
     {
-        const string ApiVersion = "api-version=2016-07-01";
+        const string ApiVersion = "api-version=2020-01-01";
         const string ManagmentEndpoint = "https://management.azure.com/";
         const string AddAccountText = "Add New Account";
         const string ClientId = "Set ClientId here...";
@@ -60,11 +60,11 @@ namespace Microsoft.Vault.Explorer
 
         private async void uxComboBoxAccounts_SelectedIndexChanged(object sender, EventArgs e)
         {
-            switch(uxComboBoxAccounts.SelectedItem)
+            switch (uxComboBoxAccounts.SelectedItem)
             {
                 case null:
                     return;
-                    
+
                 case AddAccountText:
                     AddNewAccount();
                     break;
@@ -88,11 +88,15 @@ namespace Microsoft.Vault.Explorer
 
             using (var op = NewUxOperationWithProgress(uxComboBoxAccounts))
             {
-                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(_credential.GetToken(new TokenRequestContext()).GetType().ToString(), _credential.GetToken(new TokenRequestContext()).Token);
-                var hrm = await _httpClient.GetAsync($"{ManagmentEndpoint}subscriptions?{ApiVersion}", op.CancellationToken);
-                var json = await hrm.Content.ReadAsStringAsync();
+                //_httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(_credential.GetToken(new TokenRequestContext()).GetType().ToString(), _credential.GetToken(new TokenRequestContext()).Token);
+                // ksapp: Fixed token issue giving invalid header : https://stackoverflow.com/questions/75700354/how-to-call-the-azure-rest-api-inside-of-net-core-6-api
+                var accessToken = _credential.GetToken(new TokenRequestContext()).Token;
+                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+                var res = await _httpClient.GetAsync($"{ManagmentEndpoint}subscriptions?{ApiVersion}", op.CancellationToken);
+                var json = await res.Content.ReadAsStringAsync();
+                Console.WriteLine(json);
                 var subs = JsonConvert.DeserializeObject<SubscriptionsResponse>(json);
-
+                Console.WriteLine(subs);
                 uxListViewSubscriptions.Items.Clear();
                 uxListViewVaults.Items.Clear();
                 uxPropertyGridVault.SelectedObject = null;
@@ -131,7 +135,7 @@ namespace Microsoft.Vault.Explorer
                 var vault = await _currentKeyVaultMgmtClient.Vaults.GetAsync(v.GroupName, v.Name);
                 uxPropertyGridVault.SelectedObject = new PropertyObjectVault(s.Subscription, v.GroupName, vault);
                 uxButtonOK.Enabled = true;
-                CurrentVaultAlias = new VaultAlias(v.Name, new string[] { v.Name }, new string[] { "Custom" }) { DomainHint = _currentAccountItem.DomainHint, UserAlias = _currentAccountItem.UserAlias};
+                CurrentVaultAlias = new VaultAlias(v.Name, new string[] { v.Name }, new string[] { "Custom" }) { DomainHint = _currentAccountItem.DomainHint, UserAlias = _currentAccountItem.UserAlias };
             }
         }
 
@@ -267,7 +271,7 @@ namespace Microsoft.Vault.Explorer
         [DisplayName("Sku")]
         [ReadOnly(true)]
         public SkuName Sku => _vault.Properties.Sku.Name;
-        
+
         [DisplayName("Access Policies")]
         [ReadOnly(true)]
         [TypeConverter(typeof(ExpandableCollectionObjectConverter))]
