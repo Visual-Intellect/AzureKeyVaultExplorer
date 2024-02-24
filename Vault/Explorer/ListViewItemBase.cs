@@ -86,7 +86,7 @@ namespace Microsoft.Vault.Explorer
         /// [NotBefore] Valid from time (UTC) 
         /// [Expires] Valid until time (UTC) 
         /// </summary>
-        public bool Active => (DateTime.UtcNow >= (NotBefore ?? DateTime.MinValue)) && (DateTime.UtcNow <= (Expires ?? DateTime.MaxValue));
+        public bool Active => (DateTimeOffset.UtcNow >= (NotBefore ?? DateTimeOffset.MinValue)) && (DateTimeOffset.UtcNow <= (Expires ?? DateTimeOffset.MaxValue));
 
         private static string[] GroupIndexToName = new string[] { "s", "f", "certificate", "key vault certificate", "secret" };
         public string Kind => GroupIndexToName[GroupIndex];

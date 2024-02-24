@@ -53,7 +53,7 @@ namespace Microsoft.Vault.Explorer
         public SecretDialog(ISession session) : this(session, "New secret", ItemDialogBaseMode.New)
         {
             _changed = true;
-            var s = new KeyVaultSecret(null, null);
+            var s = new KeyVaultSecret("NewSecret", "");
             s.Properties.ContentType = ContentTypeEnumConverter.GetDescription(ContentType.Text);
             RefreshSecretObject(s);
             SecretKind defaultSK = TryGetDefaultSecretKind();

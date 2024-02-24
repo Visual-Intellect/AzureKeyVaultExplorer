@@ -16,7 +16,7 @@ namespace Microsoft.Vault.Library
         {
             if (false == Consts.ValidVaultNameRegex.Match(vaultName).Success)
             {
-                throw new ArgumentException($"Invalid vault name {vaultName}, value must satisfy the following regex: {Consts.ValidVaultNameRegex}", nameof(vaultName));
+                // throw new ArgumentException($"Invalid vault name {vaultName}, value must satisfy the following regex: {Consts.ValidVaultNameRegex}", nameof(vaultName));
             }
         }
 

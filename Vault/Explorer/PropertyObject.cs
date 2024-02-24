@@ -139,8 +139,8 @@ namespace Microsoft.Vault.Explorer
         public bool IsValueValid => (Value == null) ? false : SecretKind.ValueRegex.IsMatch(Value);
 
         [Browsable(false)]
-        public bool IsExpirationValid => ((NotBefore ?? DateTime.MinValue) < (Expires ?? DateTime.MaxValue))
-            && ((Expires ?? DateTime.MaxValue) <= (SecretKind.MaxExpiration == TimeSpan.MaxValue ? DateTime.MaxValue : DateTime.UtcNow + SecretKind.MaxExpiration));
+        public bool IsExpirationValid => ((NotBefore ?? DateTimeOffset.MinValue) < (Expires ?? DateTimeOffset.MaxValue))
+            && ((Expires ?? DateTimeOffset.MaxValue) <= (SecretKind.MaxExpiration == TimeSpan.MaxValue ? DateTimeOffset.MaxValue : DateTimeOffset.UtcNow + SecretKind.MaxExpiration));
 
         protected PropertyObject(Uri identifier, string name, IDictionary<string, string> tags,
             bool? enabled, DateTimeOffset? expires, DateTimeOffset? notBefore,
