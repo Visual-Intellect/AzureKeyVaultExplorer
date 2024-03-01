@@ -19,17 +19,19 @@ namespace Microsoft.Vault.Explorer
     {
         public readonly CertificateProperties CertificateProperties;
         public readonly string Thumbprint;
+        public readonly string DomainHint;
 
-        public ListViewItemCertificate(ISession session, CertificateProperties certificateProperties) :
-            base(session, KeyVaultCertificatesGroup, certificateProperties.Id, certificateProperties.Name, certificateProperties.Tags, certificateProperties.Enabled, certificateProperties.CreatedOn, certificateProperties.UpdatedOn, certificateProperties.NotBefore, certificateProperties.ExpiresOn)
+        public ListViewItemCertificate(ISession session, CertificateProperties certificateProperties, string domainHint) :
+            base(session, KeyVaultCertificatesGroup, certificateProperties.Id, certificateProperties.Name, certificateProperties.Tags, certificateProperties.Enabled, certificateProperties.CreatedOn, certificateProperties.UpdatedOn, certificateProperties.NotBefore, certificateProperties.ExpiresOn, domainHint)
         {
             CertificateProperties = certificateProperties;
             Thumbprint = Utils.ByteArrayToHex(certificateProperties.X509Thumbprint)?.ToLowerInvariant();
+            DomainHint = domainHint;
         }
 
-        public ListViewItemCertificate(ISession session, KeyVaultCertificate c) : this(session, c.Properties) { }
+        public ListViewItemCertificate(ISession session, KeyVaultCertificate c, string DomainHint) : this(session, c.Properties, DomainHint) { }
 
-        public ListViewItemCertificate(ISession session, KeyVaultCertificateWithPolicy cb) : this(session, cb.Properties) { }
+        public ListViewItemCertificate(ISession session, KeyVaultCertificateWithPolicy cb, string DomainHint) : this(session, cb.Properties, DomainHint) { }
 
         protected override IEnumerable<PropertyDescriptor> GetCustomProperties()
         {
@@ -51,14 +53,14 @@ namespace Microsoft.Vault.Explorer
             CertificateProperties certificateProperties = new CertificateProperties(Name);
             certificateProperties.Enabled = !CertificateProperties.Enabled;
             KeyVaultCertificate cb = await Session.CurrentVault.UpdateCertificateAsync(certificateProperties, cancellationToken); // Toggle only Enabled attribute
-            return new ListViewItemCertificate(Session, cb);
+            return new ListViewItemCertificate(Session, cb, DomainHint);
         }
 
         public override async Task<ListViewItemBase> ResetExpirationAsync(CancellationToken cancellationToken)
         {
             var ca = new CertificateProperties(Name);
             KeyVaultCertificate cb = await Session.CurrentVault.UpdateCertificateAsync(ca, cancellationToken); // Reset only NotBefore and Expires CertificateProperties
-            return new ListViewItemCertificate(Session, cb);
+            return new ListViewItemCertificate(Session, cb, DomainHint);
         }
 
         public override async Task<ListViewItemBase> DeleteAsync(CancellationToken cancellationToken)
@@ -87,7 +89,7 @@ namespace Microsoft.Vault.Explorer
             };
             await Session.CurrentVault.UpdateCertificatePolicyAsync(certNew.Name, certNew.CertificatePolicy, cancellationToken);
             cb = await Session.CurrentVault.UpdateCertificateAsync(properties, cancellationToken);
-            return new ListViewItemCertificate(Session, cb);
+            return new ListViewItemCertificate(Session, cb, DomainHint);
         }
 
         public static async Task<ListViewItemCertificate> NewAsync(ISession session, PropertyObject newObject, CancellationToken cancellationToken)
@@ -98,7 +100,7 @@ namespace Microsoft.Vault.Explorer
             ImportCertificateOptions importCertificateOptions = new ImportCertificateOptions(certNew.Name, certNew.Certificate.RawData);
             importCertificateOptions.Policy = certNew.CertificatePolicy;
             KeyVaultCertificateWithPolicy cb = await session.CurrentVault.ImportCertificateAsync(importCertificateOptions, cancellationToken);
-            return new ListViewItemCertificate(session, cb);
+            return new ListViewItemCertificate(session, cb, "");
         }
     }
 }

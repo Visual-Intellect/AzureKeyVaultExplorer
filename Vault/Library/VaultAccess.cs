@@ -22,7 +22,10 @@ namespace Microsoft.Vault.Library
         [JsonIgnore]
         public readonly int Order;
 
-        public VaultAccess(string clientId, int order)
+        [JsonIgnore]
+        public readonly string DomainHint;
+
+        public VaultAccess(string clientId, int order, string domainHint = "")
         {
             Guid r;
             if (!Guid.TryParseExact(clientId, "D", out r))
@@ -31,6 +34,8 @@ namespace Microsoft.Vault.Library
             }
             ClientId = clientId;
             Order = order;
+            DomainHint = domainHint;
+
         }
 
         protected abstract InteractiveBrowserCredential AcquireTokenInternal(AuthenticationRecord auth, string userAlias = "");
@@ -67,15 +72,15 @@ namespace Microsoft.Vault.Library
         [JsonProperty]
         public readonly string UserAliasType;
 
-        public VaultAccessUserInteractive(string domainHint) : base(PowerShellApplicationId, 2)
+        public VaultAccessUserInteractive(string domainHint) : base(PowerShellApplicationId, 2, domainHint)
         {
             DomainHint = string.IsNullOrEmpty(domainHint) ? "microsoft.com" : domainHint;
         }
 
         [JsonConstructor]
-        public VaultAccessUserInteractive(string domainHint, string UserAlias) : base(PowerShellApplicationId, 2)
+        public VaultAccessUserInteractive(string domainHint, string UserAlias) : base(PowerShellApplicationId, 2, domainHint)
         {
-            DomainHint = string.IsNullOrEmpty(domainHint) ? "microsoft.com" : domainHint;
+            DomainHint = DomainHint ?? (string.IsNullOrEmpty(domainHint) ? "microsoft.com" : domainHint);
             UserAliasType = string.IsNullOrEmpty(UserAlias) ? Environment.UserName : UserAlias;
         }
 

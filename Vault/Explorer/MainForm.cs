@@ -230,14 +230,16 @@ namespace Microsoft.Vault.Explorer
                             CurrentVaultAlias.CertificatesCollectionEnabled = true;
                         }
                     );
+
+                    string domainHint = CurrentVault.VaultsConfig.Values?.FirstOrDefault()?.ReadWrite?.FirstOrDefault()?.DomainHint;
                     foreach (var secret in secrets)
                     {
-                        uxListViewSecrets.AddOrReplaceItem(new ListViewItemSecret(this, secret));
+                        uxListViewSecrets.AddOrReplaceItem(new ListViewItemSecret(this, secret, domainHint));
                     }
                     foreach (var cert in certificates)
                     {
                         // Remove "secret" (in fact this is a certifiacte) which was returned as part of ListSecretsAsync
-                        uxListViewSecrets.AddOrReplaceItem(new ListViewItemCertificate(this, cert));
+                        uxListViewSecrets.AddOrReplaceItem(new ListViewItemCertificate(this, cert, domainHint));
                     }
                 }
                 catch (OperationCanceledException) // User cancelled one of the list operations

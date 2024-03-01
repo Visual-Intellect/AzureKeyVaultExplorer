@@ -22,9 +22,10 @@ namespace Microsoft.Vault.Explorer
         public readonly string ContentTypeStr;
         public readonly ContentType ContentType;
 
-        public ListViewItemSecret(ISession session, SecretProperties attributes) :
+        public ListViewItemSecret(ISession session, SecretProperties attributes, string domainHint = "") :
             base(session, ContentTypeEnumConverter.GetValue(attributes.ContentType).IsCertificate() ? CertificatesGroup : SecretsGroup,
-                attributes.Id, attributes.Name, attributes.Tags, attributes.Enabled, attributes.CreatedOn, attributes.UpdatedOn, attributes.NotBefore, attributes.ExpiresOn)
+                attributes.Id, attributes.Name, attributes.Tags, attributes.Enabled, attributes.CreatedOn, attributes.UpdatedOn, attributes.NotBefore, attributes.ExpiresOn,
+                domainHint)
         {
             Attributes = attributes;
             ContentTypeStr = attributes.ContentType;

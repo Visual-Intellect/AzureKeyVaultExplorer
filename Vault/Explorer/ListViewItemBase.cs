@@ -5,12 +5,14 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.Vault.Library;
+using static System.Net.WebRequestMethods;
 
 namespace Microsoft.Vault.Explorer
 {
@@ -36,10 +38,12 @@ namespace Microsoft.Vault.Explorer
         public readonly DateTimeOffset? Updated;
         public readonly DateTimeOffset? NotBefore;
         public readonly DateTimeOffset? Expires;
+        public readonly string DomainHint;
 
         protected ListViewItemBase(ISession session, int groupIndex,
             Uri identifier, string name, IDictionary<string, string> tags, bool? enabled,
-            DateTimeOffset? created, DateTimeOffset? updated, DateTimeOffset? notBefore, DateTimeOffset? expires) : base(name)
+            DateTimeOffset? created, DateTimeOffset? updated, DateTimeOffset? notBefore, DateTimeOffset? expires,
+            string domainHint) : base(name)
         {
             Session = session;
             GroupIndex = groupIndex;
@@ -52,6 +56,7 @@ namespace Microsoft.Vault.Explorer
             Updated = updated;
             NotBefore = notBefore;
             Expires = expires;
+            DomainHint = domainHint;
 
             ImageIndex = Enabled ? 2 * GroupIndex - 3 : 2 * GroupIndex - 2;
 
@@ -72,6 +77,13 @@ namespace Microsoft.Vault.Explorer
         public ListViewGroupCollection Groups => Session.ListViewSecrets.Groups;
 
         public string Id => VaultHttpsUri.ToString();
+
+        public string AzureLink {
+            get {
+                var uri = $"https://portal.azure.com/#@{DomainHint}/asset/Microsoft_Azure_KeyVault/Secret/{Id}";
+                return uri;
+            }
+        }
 
         public string ChangedBy => Microsoft.Vault.Library.Utils.GetChangedBy(Tags);
 
@@ -256,6 +268,7 @@ namespace Microsoft.Vault.Explorer
             {
                 new ReadOnlyPropertyDescriptor("Name", Name),
                 new ReadOnlyPropertyDescriptor("Link", Link),
+                new ReadOnlyPropertyDescriptor("Azure Link", AzureLink),
                 new ReadOnlyPropertyDescriptor("Identifier", Id),
                 new ReadOnlyPropertyDescriptor("Creation time", Utils.NullableDateTimeToString(Created)),
                 new ReadOnlyPropertyDescriptor("Last updated time", Utils.NullableDateTimeToString(Updated)),
