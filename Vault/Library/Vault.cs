@@ -154,7 +154,7 @@ namespace Microsoft.Vault.Library
 
         private SecretClient CreateKeyVaultClientEx(VaultAccessTypeEnum accessType, string vaultName)
         {
-            return new SecretClient(new Uri(vaultName), new DefaultAzureCredential());
+            return new SecretClient(new Uri(vaultName), new DefaultAzureCredential(includeInteractiveCredentials: true));
         }
 
         #endregion
