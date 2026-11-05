@@ -1,0 +1,16 @@
+<Project>
+  <!-- The version is the UTC date and time of the last commit, for example 2026.1105.0234.08 -->
+  <Target Name="SetVersionFromLastCommit" BeforeTargets="GetAssemblyVersion;GenerateNuspec">
+    <Exec Command="git log -1 --date=format-local:%25%25Y.%25%25m%25%25d.%25%25H%25%25M.%25%25S --format=%25%25cd"
+          EnvironmentVariables="TZ=UTC0"
+          ConsoleToMSBuild="true"
+          StandardOutputImportance="low">
+      <Output TaskParameter="ConsoleOutput" PropertyName="LastCommitVersion" />
+    </Exec>
+    <PropertyGroup>
+      <Version>$(LastCommitVersion)</Version>
+      <AssemblyVersion>$(LastCommitVersion)</AssemblyVersion>
+      <FileVersion>$(LastCommitVersion)</FileVersion>
+    </PropertyGroup>
+  </Target>
+</Project>

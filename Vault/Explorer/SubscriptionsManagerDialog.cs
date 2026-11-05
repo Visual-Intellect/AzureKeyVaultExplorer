@@ -1,29 +1,25 @@
 // Copyright (c) Microsoft Corporation. All rights reserved. 
 // Licensed under the MIT License. See License.txt in the project root for license information. 
 
-using Microsoft.Azure;
-using Microsoft.Azure.Management.KeyVault;
-using Microsoft.Azure.Management.KeyVault.Models;
-using Microsoft.Rest;
+using Azure.Identity;
+using Azure.ResourceManager;
+using Azure.ResourceManager.KeyVault;
+using Azure.ResourceManager.KeyVault.Models;
+using Azure.ResourceManager.Resources;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing.Design;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text.RegularExpressions;
-using Azure.Identity;
+using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.Vault.Library;
-using Azure.Core;
 
 namespace Microsoft.Vault.Explorer
 {
     public partial class SubscriptionsManagerDialog : Form
     {
-        const string ApiVersion = "api-version=2020-01-01";
-        const string ManagmentEndpoint = "https://management.azure.com/";
         const string AddAccountText = "Add New Account";
         const string ClientId = "Set ClientId here...";
         const string AddDomainHintText = "How to add new domain hint here...";
@@ -35,15 +31,12 @@ namespace Microsoft.Vault.Explorer
 
         private AccountItem _currentAccountItem;
         private InteractiveBrowserCredential _credential;
-        private KeyVaultManagementClient _currentKeyVaultMgmtClient;
-        private readonly HttpClient _httpClient;
 
         public VaultAlias CurrentVaultAlias { get; private set; }
 
         public SubscriptionsManagerDialog()
         {
             InitializeComponent();
-            _httpClient = new HttpClient();
 
             // Create Default accounts based on domain hints and aliases.
             foreach (string userAccountName in Settings.Default.UserAccountNamesList)
@@ -88,19 +81,12 @@ namespace Microsoft.Vault.Explorer
 
             using (var op = NewUxOperationWithProgress(uxComboBoxAccounts))
             {
-                //_httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(_credential.GetToken(new TokenRequestContext()).GetType().ToString(), _credential.GetToken(new TokenRequestContext()).Token);
-                // ksapp: Fixed token issue giving invalid header : https://stackoverflow.com/questions/75700354/how-to-call-the-azure-rest-api-inside-of-net-core-6-api
-                var accessToken = _credential.GetToken(new TokenRequestContext()).Token;
-                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-                var res = await _httpClient.GetAsync($"{ManagmentEndpoint}subscriptions?{ApiVersion}", op.CancellationToken);
-                var json = await res.Content.ReadAsStringAsync();
-                Console.WriteLine(json);
-                var subs = JsonConvert.DeserializeObject<SubscriptionsResponse>(json);
-                Console.WriteLine(subs);
+                var armClient = new ArmClient(_credential);
+                var subscriptions = await Task.Run(() => armClient.GetSubscriptions().GetAll(op.CancellationToken).ToList(), op.CancellationToken);
                 uxListViewSubscriptions.Items.Clear();
                 uxListViewVaults.Items.Clear();
                 uxPropertyGridVault.SelectedObject = null;
-                foreach (var s in subs.Subscriptions)
+                foreach (var s in subscriptions)
                 {
                     uxListViewSubscriptions.Items.Add(new ListViewItemSubscription(s));
                 }
@@ -113,9 +99,7 @@ namespace Microsoft.Vault.Explorer
             if (null == s) return;
             using (var op = NewUxOperationWithProgress(uxComboBoxAccounts))
             {
-                var tvcc = new TokenCredentials(_credential.GetToken(new TokenRequestContext()).Token);
-                _currentKeyVaultMgmtClient = new KeyVaultManagementClient(tvcc) { SubscriptionId = s.Subscription.SubscriptionId.ToString() };
-                var vaults = await _currentKeyVaultMgmtClient.Vaults.ListAsync(null, op.CancellationToken);
+                var vaults = await Task.Run(() => s.Subscription.GetKeyVaults(null, op.CancellationToken).ToList(), op.CancellationToken);
                 uxListViewVaults.Items.Clear();
                 foreach (var v in vaults)
                 {
@@ -132,10 +116,10 @@ namespace Microsoft.Vault.Explorer
             if ((null == s) || (null == v)) return;
             using (var op = NewUxOperationWithProgress(uxComboBoxAccounts))
             {
-                var vault = await _currentKeyVaultMgmtClient.Vaults.GetAsync(v.GroupName, v.Name);
-                uxPropertyGridVault.SelectedObject = new PropertyObjectVault(s.Subscription, v.GroupName, vault);
+                var vault = await v.Vault.GetAsync(op.CancellationToken);
+                uxPropertyGridVault.SelectedObject = new PropertyObjectVault(s.Subscription.Data, v.GroupName, vault.Value.Data);
                 uxButtonOK.Enabled = true;
-                CurrentVaultAlias = new VaultAlias(v.Name, new string[] { v.Name }, new string[] { "Custom" }) { DomainHint = _currentAccountItem.DomainHint, UserAlias = _currentAccountItem.UserAlias };
+                CurrentVaultAlias = new VaultAlias(v.Name, new string[] { vault.Value.Data.Properties.VaultUri.ToString() }, new string[] { "Custom" }) { DomainHint = _currentAccountItem.DomainHint, UserAlias = _currentAccountItem.UserAlias };
             }
         }
 
@@ -191,44 +175,41 @@ namespace Microsoft.Vault.Explorer
 
     public class ListViewItemSubscription : ListViewItem
     {
-        public readonly Subscription Subscription;
+        public readonly SubscriptionResource Subscription;
 
-        public ListViewItemSubscription(Subscription s) : base(s.DisplayName)
+        public ListViewItemSubscription(SubscriptionResource s) : base(s.Data.DisplayName)
         {
             Subscription = s;
-            Name = s.DisplayName;
-            SubItems.Add(s.SubscriptionId.ToString());
-            ToolTipText = $"State: {s.State}";
+            Name = s.Data.DisplayName;
+            SubItems.Add(s.Data.SubscriptionId);
+            ToolTipText = $"State: {s.Data.State}";
             ImageIndex = 0;
         }
     }
 
     public class ListViewItemVault : ListViewItem
     {
-        // https://azure.microsoft.com/en-us/documentation/articles/guidance-naming-conventions/
-        private static Regex s_resourceNameRegex = new Regex(@".*\/resourceGroups\/(?<GroupName>[a-zA-Z0-9_\-\.]{1,64})\/", RegexOptions.CultureInvariant | RegexOptions.Compiled);
-
-        public readonly Microsoft.Azure.Management.KeyVault.Models.Vault Vault;
+        public readonly KeyVaultResource Vault;
         public readonly string GroupName;
 
-        public ListViewItemVault(Microsoft.Azure.Management.KeyVault.Models.Vault vault) : base(vault.Name)
+        public ListViewItemVault(KeyVaultResource vault) : base(vault.Data.Name)
         {
             Vault = vault;
-            Name = vault.Name;
-            GroupName = s_resourceNameRegex.Match(vault.Id).Groups["GroupName"].Value;
+            Name = vault.Data.Name;
+            GroupName = vault.Id.ResourceGroupName;
             SubItems.Add(GroupName);
-            ToolTipText = $"Location: {vault.Location}";
+            ToolTipText = $"Location: {vault.Data.Location}";
             ImageIndex = 1;
         }
     }
 
     public class PropertyObjectVault
     {
-        private readonly Subscription _subscription;
+        private readonly SubscriptionData _subscription;
         private readonly string _resourceGroupName;
-        private readonly Microsoft.Azure.Management.KeyVault.Models.Vault _vault;
+        private readonly KeyVaultData _vault;
 
-        public PropertyObjectVault(Subscription s, string resourceGroupName, Microsoft.Azure.Management.KeyVault.Models.Vault vault)
+        public PropertyObjectVault(SubscriptionData s, string resourceGroupName, KeyVaultData vault)
         {
             _subscription = s;
             _resourceGroupName = resourceGroupName;
@@ -246,11 +227,11 @@ namespace Microsoft.Vault.Explorer
 
         [DisplayName("Location")]
         [ReadOnly(true)]
-        public string Location => _vault.Location;
+        public string Location => _vault.Location.ToString();
 
         [DisplayName("Uri")]
         [ReadOnly(true)]
-        public string Uri => _vault.Properties.VaultUri;
+        public string Uri => _vault.Properties.VaultUri?.ToString();
 
         [DisplayName("Subscription Name")]
         [ReadOnly(true)]
@@ -258,7 +239,7 @@ namespace Microsoft.Vault.Explorer
 
         [DisplayName("Subscription Id")]
         [ReadOnly(true)]
-        public Guid SubscriptionId => _subscription.SubscriptionId;
+        public string SubscriptionId => _subscription.SubscriptionId;
 
         [DisplayName("Resource Group Name")]
         [ReadOnly(true)]
@@ -270,7 +251,7 @@ namespace Microsoft.Vault.Explorer
 
         [DisplayName("Sku")]
         [ReadOnly(true)]
-        public SkuName Sku => _vault.Properties.Sku.Name;
+        public string Sku => _vault.Properties.Sku.Name.ToString();
 
         [DisplayName("Access Policies")]
         [ReadOnly(true)]
@@ -292,10 +273,9 @@ namespace Microsoft.Vault.Explorer
     [Editor(typeof(ExpandableObjectConverter), typeof(UITypeEditor))]
     public class AccessPolicyEntryItem
     {
-        private static string[] EmptyList = new string[] { };
-        private AccessPolicyEntry _ape;
+        private KeyVaultAccessPolicy _ape;
 
-        public AccessPolicyEntryItem(int index, AccessPolicyEntry ape)
+        public AccessPolicyEntryItem(int index, KeyVaultAccessPolicy ape)
         {
             Index = index;
             _ape = ape;
@@ -308,42 +288,21 @@ namespace Microsoft.Vault.Explorer
         public Guid? ApplicationId => _ape.ApplicationId;
 
         [Description("Object ID of the principal")]
-        public Guid ObjectId => _ape.ObjectId;
+        public string ObjectId => _ape.ObjectId;
 
         [Description("Permissions to keys")]
-        public string PermissionsToKeys => string.Join(",", _ape.Permissions.Keys ?? EmptyList);
+        public string PermissionsToKeys => string.Join(",", _ape.Permissions.Keys);
 
         [Description("Permissions to secrets")]
-        public string PermissionsToSecrets => string.Join(",", _ape.Permissions.Secrets ?? EmptyList);
+        public string PermissionsToSecrets => string.Join(",", _ape.Permissions.Secrets);
 
         [Description("Permissions to certificates")]
-        public string PermissionsToCertificates => string.Join(",", _ape.Permissions.Certificates ?? EmptyList);
+        public string PermissionsToCertificates => string.Join(",", _ape.Permissions.Certificates);
 
         [Description("Tenant ID of the principal")]
         public Guid TenantId => _ape.TenantId;
 
         public override string ToString() => JsonConvert.SerializeObject(this, Formatting.Indented);
-    }
-
-    #endregion
-
-    #region Managment endpoint JSON response classes
-
-    [JsonObject]
-    public class SubscriptionsResponse
-    {
-        [JsonProperty(PropertyName = "value")]
-        public Subscription[] Subscriptions { get; set; }
-    }
-
-    [JsonObject]
-    public class Subscription
-    {
-        public string Id { get; set; }
-        public Guid SubscriptionId { get; set; }
-        public string DisplayName { get; set; }
-        public string State { get; set; }
-        public string AuthorizationSource { get; set; }
     }
 
     #endregion

@@ -126,24 +126,6 @@ namespace Microsoft.Vault.Explorer
         }
 
         [UserScopedSetting()]
-        [DefaultSettingValue("false")]
-        [DisplayName("Disable telemetry")]
-        [Description("Value indicating whether sending of telemetry to Application Insights is disabled. Telemetry includes only type of user actions, their duration and sometimes exceptions.")]
-        [Browsable(true)]
-        [Category("General")]
-        public bool DisableTelemetry
-        {
-            get
-            {
-                return ((bool)(this[nameof(DisableTelemetry)]));
-            }
-            set
-            {
-                this[nameof(DisableTelemetry)] = value;
-            }
-        }
-
-        [UserScopedSetting()]
         [DefaultSettingValue(@".\")]
         [DisplayName("Root location")]
         [Description("Relative or absolute path to root folder where .json files are located.\nEnvironment variables are supported and expanded accordingly.")]

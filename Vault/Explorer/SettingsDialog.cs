@@ -17,7 +17,7 @@ using Microsoft.Vault.Library;
 
 namespace Microsoft.Vault.Explorer
 {
-    public partial class SettingsDialog : FormTelemetry
+    public partial class SettingsDialog : Form
     {
         private readonly Settings _currentSettings;
 
@@ -72,8 +72,8 @@ namespace Microsoft.Vault.Explorer
             StringBuilder sb = new StringBuilder();
             sb.AppendLine(Utils.GetFileVersionString(string.Format("{0} version: ", Utils.AppName), Path.GetFileName(Application.ExecutablePath), string.Format(" ({0})", Environment.Is64BitProcess ? "x64" : "x86")));
             sb.AppendLine(string.Format(".NET framework version: {0}", Environment.Version));
-            sb.AppendLine(Utils.GetFileVersionString("Microsoft.Azure.KeyVault.dll version: ", "Microsoft.Azure.KeyVault.dll"));
-            sb.AppendLine(Utils.GetFileVersionString("Microsoft.Azure.Management.KeyVault.dll version: ", "Microsoft.Azure.Management.KeyVault.dll"));
+            sb.AppendLine(Utils.GetFileVersionString("Azure.Security.KeyVault.Secrets.dll version: ", "Azure.Security.KeyVault.Secrets.dll"));
+            sb.AppendLine(Utils.GetFileVersionString("Azure.ResourceManager.KeyVault.dll version: ", "Azure.ResourceManager.KeyVault.dll"));
             return sb.ToString();
         }
 

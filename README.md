@@ -10,6 +10,7 @@ Contact: [Azure Key Vault Explorer Developers](mailto:Azure Key Vault Explorer D
 ## Table of Contents
   * [Key features](#key-features)
   * [How to add or open new vaults](#how-to-add-or-open-new-vaults)
+  * [Build from source](#build-from-source)
   * [Keyboard and mouse shortcuts](#keyboard-and-mouse-shortcuts)
   * [Configuration](#configuration)
     * [Vaults.json](#vaultsjson)
@@ -17,7 +18,6 @@ Contact: [Azure Key Vault Explorer Developers](mailto:Azure Key Vault Explorer D
     * [CustomTags.json](#customtagsjson)
     * [VaultAliases.json](#vaultaliasesjson)
     * [User.config](#userconfig)
-  * [Telemetry](#telemetry)
   * [Screen shots](#screen-shots)
       * [Main window](#main-window)
       * [Search and copy secret to clipboard](#search-and-copy-secret-to-clipboard)
@@ -42,7 +42,6 @@ Contact: [Azure Key Vault Explorer Developers](mailto:Azure Key Vault Explorer D
 * Export all or selected items to .tsv file for future analysis or reporting 
 * Favorite items per vault
 * Explore your vaults and access policy from your subscriptions
-* Open PowerShell session with currently selected vaults and quickly automate things
 * Fast regex based search to quickly find the secret by any metadata
 * Customizable regex based secret kinds to verify secret name and value and auto extract non-secret info to Tags, plus guide use with secret value template
 * Custom required and optional tags per secret
@@ -54,8 +53,6 @@ Contact: [Azure Key Vault Explorer Developers](mailto:Azure Key Vault Explorer D
 * Certificate and secret revision control, rollback to previous value with just a click 
 * Quickly detects duplication of secrets
 * Generate secure password, new guid or new api key as a secret value with single click
-* Usage telemetry and diagnostic instrumentation
-* Auto update of the bits
 
 ## How to add or open new vaults
 There are 4 ways how you can make Vault Explorer to work with your vaults:  
@@ -72,6 +69,19 @@ Just complete the below fairly easy manual steps *once*:
 * Edit each file accordingly, read the Configuration section below 
 * Go back to Options tab in the Settings dialog, and change "Root location" from .\ to point to where you put all four files
 * Hit OK button
+
+## Build from source
+Requirements: the .NET 10 SDK and Git. The build gets the app version from the last Git commit.
+
+Run this command from the repository root:
+
+```powershell
+dotnet build AzureKeyVaultExplorer.sln -c Release
+```
+
+To run the app on a computer without the SDK, install the .NET 10 Desktop Runtime (x64).
+
+The build output is in `Vault\Explorer\bin\Release\`. It contains the sample JSON configuration files from this repository. To use your own vaults, see [Configuration](#configuration). A rebuild replaces `Vaults.json` in the output folder, so keep your own copy somewhere else.
 
 ## Keyboard and mouse shortcuts
 * Drag with Left mouse button - initiate drag & drop operation with *basic* item information (name and value only) 
@@ -226,15 +236,6 @@ Here an example for location of the file:
 ```
 %LocalAppData%\Apps\2.0\Data\2310EVQO.1C1\Q6P3APKG.HY4\vaul..tion_7446cb71d1187222_07e0.03f5_fc3133cd208276e1\Data\2016.1013.1742.39\user.config
 ```
-
-## Telemetry
-By default Azure Key Vault Explorer collects and sends aggregated telemetry to Application Insights about usage of the tool. Telemetry includes only the following:
-* Type of user actions - which button / menu item was clicked
-* Action duration – how long time particular action took (for example: action to save a secret)
-* Exceptions – only in case action failed, for diagnostic purposes only exception information is collected
-
-All collected telemetry is stored for no more than 90 days.
-Telemetry can be disabled in the Settings dialog. Set *Disable telemetry* to *True*, hit *OK* button and restart the application.
 
 ## Screen shots
 

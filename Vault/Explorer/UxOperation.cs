@@ -1,13 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved. 
 // Licensed under the MIT License. See License.txt in the project root for license information. 
 
-using Microsoft.ApplicationInsights.DataContracts;
 using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Diagnostics;
-using System.Runtime.Remoting.Messaging;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -19,9 +17,10 @@ namespace Microsoft.Vault.Explorer
     /// </summary>
     public class UxOperation : IDisposable
     {
+        public static readonly AsyncLocal<bool> CancelledByUser = new AsyncLocal<bool>();
+
         public CancellationToken CancellationToken => _cancellationTokenSource.Token;
 
-        private readonly DateTimeOffset _startTime;
         private readonly VaultAlias _currentVaultAlias;
         private readonly ToolStripItem _statusLabel;
         private readonly ToolStripProgressBar _statusProgress;
@@ -33,7 +32,6 @@ namespace Microsoft.Vault.Explorer
 
         public UxOperation(VaultAlias currentVaultAlias, ToolStripItem statusLabel, ToolStripProgressBar statusProgress, ToolStripItem cancelButton, params ToolStripItem[] controlsToToggle)
         {
-            _startTime = DateTimeOffset.UtcNow;
             _currentVaultAlias = currentVaultAlias;
             _statusLabel = statusLabel;
             _statusProgress = statusProgress;
@@ -60,14 +58,6 @@ namespace Microsoft.Vault.Explorer
             {
                 _cancelButton.Click -= uxButtonCancel_Click;
             }
-
-            var eventTelemetry = new EventTelemetry(_controlsToToggle[0].Name)
-            {
-                Timestamp = _startTime,
-            };
-            eventTelemetry.Metrics.Add("Duration", (DateTimeOffset.UtcNow - _startTime).TotalMilliseconds);
-            eventTelemetry.Metrics.Add("Cancelled", _cancellationTokenSource.IsCancellationRequested ? 1 : 0);
-            Telemetry.Default.TrackEvent(eventTelemetry);
 
             _cancellationTokenSource.Dispose();
             ToggleControls(true, _controlsToToggle);
@@ -132,7 +122,7 @@ namespace Microsoft.Vault.Explorer
 
         private void uxButtonCancel_Click(object sender, EventArgs e)
         {
-            CallContext.LogicalSetData($"{nameof(UxOperation) + nameof(CancellationToken)}", CancellationToken);
+            CancelledByUser.Value = true;
             _cancellationTokenSource.Cancel();
         }
     }

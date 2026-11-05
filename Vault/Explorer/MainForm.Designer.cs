@@ -93,7 +93,6 @@
             this.uxButtonSave = new System.Windows.Forms.ToolStripMenuItem();
             this.uxButtonExportToTsv = new System.Windows.Forms.ToolStripMenuItem();
             this.uxButtonFavorite = new System.Windows.Forms.ToolStripButton();
-            this.uxButtonPowershell = new System.Windows.Forms.ToolStripButton();
             this.uxButtonSettings = new System.Windows.Forms.ToolStripButton();
             this.uxButtonHelp = new System.Windows.Forms.ToolStripButton();
             this.toolStripContainer1 = new System.Windows.Forms.ToolStripContainer();
@@ -464,7 +463,6 @@
             this.uxButtonShare,
             this.uxButtonFavorite,
             toolStripSeparator3,
-            this.uxButtonPowershell,
             this.uxButtonSettings,
             this.uxButtonHelp});
             this.uxToolStrip.Location = new System.Drawing.Point(3, 0);
@@ -690,17 +688,6 @@
             this.uxButtonFavorite.ToolTipText = "Add item(s) to favorites group";
             this.uxButtonFavorite.Click += new System.EventHandler(this.uxButtonFavorite_Click);
             // 
-            // uxButtonPowershell
-            // 
-            this.uxButtonPowershell.Enabled = false;
-            this.uxButtonPowershell.Image = global::Microsoft.Vault.Explorer.Properties.Resources.powershell;
-            this.uxButtonPowershell.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.uxButtonPowershell.Name = "uxButtonPowershell";
-            this.uxButtonPowershell.Size = new System.Drawing.Size(105, 25);
-            this.uxButtonPowershell.Text = "&PowerShell";
-            this.uxButtonPowershell.ToolTipText = "Open PowerShell session with current vault(s)";
-            this.uxButtonPowershell.Click += new System.EventHandler(this.uxButtonPowershell_Click);
-            // 
             // uxButtonSettings
             // 
             this.uxButtonSettings.Image = global::Microsoft.Vault.Explorer.Properties.Resources.wrench;
@@ -897,7 +884,6 @@
         private System.Windows.Forms.ToolStripMenuItem uxMenuItemSave;
         private System.Windows.Forms.ToolStripMenuItem uxButtonExportToTsv;
         private System.Windows.Forms.ToolStripMenuItem uxMenuItemExportToTsv;
-        private System.Windows.Forms.ToolStripButton uxButtonPowershell;
     }
 }
 
