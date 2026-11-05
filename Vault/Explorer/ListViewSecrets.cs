@@ -20,6 +20,7 @@ namespace Microsoft.Vault.Explorer
     {
         public const int FirstCustomColumnIndex = 4;
 
+        [System.ComponentModel.DesignerSerializationVisibility(System.ComponentModel.DesignerSerializationVisibility.Hidden)]
         public int SortingColumn { get; set; }
 
         public ListViewSecrets()

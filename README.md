@@ -18,7 +18,6 @@ Contact: [Azure Key Vault Explorer Developers](mailto:Azure Key Vault Explorer D
     * [CustomTags.json](#customtagsjson)
     * [VaultAliases.json](#vaultaliasesjson)
     * [User.config](#userconfig)
-  * [Telemetry](#telemetry)
   * [Screen shots](#screen-shots)
       * [Main window](#main-window)
       * [Search and copy secret to clipboard](#search-and-copy-secret-to-clipboard)
@@ -43,7 +42,6 @@ Contact: [Azure Key Vault Explorer Developers](mailto:Azure Key Vault Explorer D
 * Export all or selected items to .tsv file for future analysis or reporting 
 * Favorite items per vault
 * Explore your vaults and access policy from your subscriptions
-* Open PowerShell session with currently selected vaults and quickly automate things
 * Fast regex based search to quickly find the secret by any metadata
 * Customizable regex based secret kinds to verify secret name and value and auto extract non-secret info to Tags, plus guide use with secret value template
 * Custom required and optional tags per secret
@@ -55,8 +53,6 @@ Contact: [Azure Key Vault Explorer Developers](mailto:Azure Key Vault Explorer D
 * Certificate and secret revision control, rollback to previous value with just a click 
 * Quickly detects duplication of secrets
 * Generate secure password, new guid or new api key as a secret value with single click
-* Usage telemetry and diagnostic instrumentation
-* Auto update of the bits
 
 ## How to add or open new vaults
 There are 4 ways how you can make Vault Explorer to work with your vaults:  
@@ -75,16 +71,15 @@ Just complete the below fairly easy manual steps *once*:
 * Hit OK button
 
 ## Build from source
-Requirements: Visual Studio with MSBuild and the .NET Framework 4.8 targeting pack.
+Requirements: the .NET 10 SDK and Git. The build gets the app version from the last Git commit.
 
-Run these commands from the repository root in a Developer PowerShell for Visual Studio:
+Run this command from the repository root:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .init\init.ps1
-msbuild AzureKeyVaultExplorer.sln /restore /m /v:minimal /p:Configuration=Release /p:Platform=x64
+dotnet build AzureKeyVaultExplorer.sln -c Release
 ```
 
-Run `init.ps1` on a new clone and each time `.init\packages.config` changes. The build fails until you do.
+To run the app on a computer without the SDK, install the .NET 10 Desktop Runtime (x64).
 
 The build output is in `Vault\Explorer\bin\Release\`. It contains the sample JSON configuration files from this repository. To use your own vaults, see [Configuration](#configuration). A rebuild replaces `Vaults.json` in the output folder, so keep your own copy somewhere else.
 
@@ -241,15 +236,6 @@ Here an example for location of the file:
 ```
 %LocalAppData%\Apps\2.0\Data\2310EVQO.1C1\Q6P3APKG.HY4\vaul..tion_7446cb71d1187222_07e0.03f5_fc3133cd208276e1\Data\2016.1013.1742.39\user.config
 ```
-
-## Telemetry
-By default Azure Key Vault Explorer collects and sends aggregated telemetry to Application Insights about usage of the tool. Telemetry includes only the following:
-* Type of user actions - which button / menu item was clicked
-* Action duration – how long time particular action took (for example: action to save a secret)
-* Exceptions – only in case action failed, for diagnostic purposes only exception information is collected
-
-All collected telemetry is stored for no more than 90 days.
-Telemetry can be disabled in the Settings dialog. Set *Disable telemetry* to *True*, hit *OK* button and restart the application.
 
 ## Screen shots
 

@@ -6,7 +6,6 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Deployment.Application;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -154,7 +153,7 @@ namespace Microsoft.Vault.Explorer
                 var n = Enumerable.Range(0, 1).Select(i => NumbersSet[r.Next(0, NumbersSet.Length)]);
                 var s = Enumerable.Range(0, 4).Select(i => SpecialCharsSet[r.Next(0, SpecialCharsSet.Length)]);
                 var a = Enumerable.Range(0, length - 11).Select(i => All[r.Next(0, All.Length)]);
-                return Encoding.ASCII.GetString(u.Concat(l).Concat(n).Concat(s).Concat(a).Shuffle().ToArray());
+                return Encoding.ASCII.GetString(Microsoft.Vault.Library.Utils.Shuffle(u.Concat(l).Concat(n).Concat(s).Concat(a)).ToArray());
             }
         }
 
@@ -166,32 +165,6 @@ namespace Microsoft.Vault.Explorer
             r.GetBytes(buff);
             r.Dispose();
             return Convert.ToBase64String(buff);
-        }
-
-        public static void ClickOnce_SetAddRemoveProgramsIcon()
-        {
-            if (ApplicationDeployment.IsNetworkDeployed && ApplicationDeployment.CurrentDeployment.IsFirstRun)
-            {
-                try
-                {
-                    using (RegistryKey myUninstallKey = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Uninstall"))
-                    {
-                        foreach (var subKeyName in myUninstallKey.GetSubKeyNames())
-                        {
-                            using (RegistryKey myKey = myUninstallKey.OpenSubKey(subKeyName, true))
-                            {
-                                object myValue = myKey.GetValue("DisplayName");
-                                if (myValue != null && myValue.ToString() == Utils.ProductName)
-                                {
-                                    myKey.SetValue("DisplayIcon", Application.ExecutablePath);
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
-                catch { }
-            }
         }
 
         public static X509Certificate2 SelectCertFromStore(StoreName name, StoreLocation location, string vaultAlias, IntPtr hwndParent)
@@ -249,18 +222,6 @@ namespace Microsoft.Vault.Explorer
                 WindowStyle = ProcessWindowStyle.Hidden,
                 UseShellExecute = false,
                 LoadUserProfile = false
-            };
-            Process.Start(sInfo);
-        }
-
-        public static void LaunchPowerShell(string vaultsJsonFile, string firstVaultName, string secondVaultName)
-        {
-            string vaultPs1 = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Vault.ps1");
-            ProcessStartInfo sInfo = new ProcessStartInfo("powershell.exe",
-                $"-NoExit -NoProfile -NoLogo -ExecutionPolicy Unrestricted -File \"{vaultPs1}\" \"{vaultsJsonFile}\" \"{firstVaultName}\" \"{secondVaultName}\"")
-            {
-                UseShellExecute = true,
-                LoadUserProfile = true
             };
             Process.Start(sInfo);
         }

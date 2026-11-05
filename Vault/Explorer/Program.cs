@@ -1,14 +1,11 @@
 ﻿﻿// Copyright (c) Microsoft Corporation. All rights reserved. 
 // Licensed under the MIT License. See License.txt in the project root for license information. 
 
-using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.Vault.Library;
 using System;
 using System.Drawing;
 using System.Linq;
-using System.Security.Permissions;
 using System.Reflection;
-using System.Runtime.Remoting.Messaging;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -30,16 +27,12 @@ namespace Microsoft.Vault.Explorer
             IdleTimer.Enabled = false;
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Telemetry.Init();
-            Application.ApplicationExit += (s, e) => Telemetry.Default.Flush();
+            Application.SetDefaultFont(new Font("Microsoft Sans Serif", 8.25f));
             Application.ApplicationExit += (s, e) => DeleteTokenCacheOnApplicationExit();
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
             Application.ThreadException += (s, e) => TrackExceptionAndShowError(e.Exception);
             AppDomain.CurrentDomain.UnhandledException += (s, e) => TrackExceptionAndShowError(e.ExceptionObject as Exception);
             AppDomain.CurrentDomain.AssemblyResolve += (s, args) => ResolveMissingAssembly(args);
-            // First run install steps
-            Utils.ClickOnce_SetAddRemoveProgramsIcon();
-            ActivationUri.RegisterVaultProtocol();
             // In case ActivationUri was passed perform the action and exit
             //Add a message filter to check if application is idle
             LeaveIdleMessageFilter limf = new LeaveIdleMessageFilter(IdleTimer);
@@ -117,15 +110,8 @@ namespace Microsoft.Vault.Explorer
         {
             if (e is OperationCanceledException)
             {
-                object o = CallContext.LogicalGetData($"{nameof(UxOperation) + nameof(CancellationToken)}");
-                if (o != null) return; // Do not show any dialog to user
+                if (UxOperation.CancelledByUser.Value) return; // Do not show any dialog to user
             }
-            // TrackException
-            Telemetry.Default.TrackException(new ExceptionTelemetry(e)
-            {
-                HandledAt = ExceptionHandledAt.Unhandled,
-                SeverityLevel = SeverityLevel.Critical,
-            });
             // Show error
             var ed = new ExceptionDialog(e);
             ed.ShowDialog();
@@ -136,7 +122,6 @@ namespace Microsoft.Vault.Explorer
     /// This class filters (listens to) all messages for the application and if
     /// a relevant message (such as mouse or keyboard) is received then it resets the timer.
     /// </summary>
-    [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.UnmanagedCode)]
     public class LeaveIdleMessageFilter : IMessageFilter
     {
         const int WM_NCLBUTTONDOWN = 0x00A1;

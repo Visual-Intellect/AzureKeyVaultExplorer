@@ -13,7 +13,7 @@ using System.Windows.Forms;
 
 namespace Microsoft.Vault.Explorer
 {
-    public partial class ExceptionDialog : FormTelemetry
+    public partial class ExceptionDialog : Form
     {
         public ExceptionDialog(Exception e)
         {

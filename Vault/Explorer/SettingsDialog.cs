@@ -17,7 +17,7 @@ using Microsoft.Vault.Library;
 
 namespace Microsoft.Vault.Explorer
 {
-    public partial class SettingsDialog : FormTelemetry
+    public partial class SettingsDialog : Form
     {
         private readonly Settings _currentSettings;
 
