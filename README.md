@@ -10,6 +10,7 @@ Contact: [Azure Key Vault Explorer Developers](mailto:Azure Key Vault Explorer D
 ## Table of Contents
   * [Key features](#key-features)
   * [How to add or open new vaults](#how-to-add-or-open-new-vaults)
+  * [Build from source](#build-from-source)
   * [Keyboard and mouse shortcuts](#keyboard-and-mouse-shortcuts)
   * [Configuration](#configuration)
     * [Vaults.json](#vaultsjson)
@@ -72,6 +73,20 @@ Just complete the below fairly easy manual steps *once*:
 * Edit each file accordingly, read the Configuration section below 
 * Go back to Options tab in the Settings dialog, and change "Root location" from .\ to point to where you put all four files
 * Hit OK button
+
+## Build from source
+Requirements: Visual Studio with MSBuild and the .NET Framework 4.8 targeting pack.
+
+Run these commands from the repository root in a Developer PowerShell for Visual Studio:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .init\init.ps1
+msbuild AzureKeyVaultExplorer.sln /restore /m /v:minimal /p:Configuration=Release /p:Platform=x64
+```
+
+Run `init.ps1` on a new clone and each time `.init\packages.config` changes. The build fails until you do.
+
+The build output is in `Vault\Explorer\bin\Release\`. It contains the sample JSON configuration files from this repository. To use your own vaults, see [Configuration](#configuration). A rebuild replaces `Vaults.json` in the output folder, so keep your own copy somewhere else.
 
 ## Keyboard and mouse shortcuts
 * Drag with Left mouse button - initiate drag & drop operation with *basic* item information (name and value only) 
